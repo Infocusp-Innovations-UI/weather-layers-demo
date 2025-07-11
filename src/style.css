@@ -1,0 +1,87 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#lmap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+.leaflet-overlay-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-container {
+  background: #666 !important;
+  outline: 0;
+}
+
+.layer-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: rgba(30, 30, 30, 0.75);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.layer-btn {
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: transparent;
+  color: white;
+  border-radius: 4px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.layer-btn.active {
+  color: #ffcc00;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.layer-btn:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.layer-controls label {
+  display: flex;
+  align-items: center;
+  color: white;
+  gap: 5px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.layer-controls input[type="checkbox"] {
+  accent-color: #ffcc00;
+  transform: scale(1.2);
+  cursor: pointer;
+}
