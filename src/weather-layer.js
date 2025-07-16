@@ -14,7 +14,7 @@ let currentLayerType = "temp";
 // let showContours = true;
 let currentDatetime;
 
-const now = new Date();
+// const now = new Date();
 // const start = new Date(
 //   Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 6),
 // );
@@ -47,11 +47,11 @@ async function getImages() {
   //  Get data for currentLayerType ( temp and rain )
   const response = {
     "tzero": 1721115960, 
-    images: ["http://localhost:5173" + "/images/band_name.tzero.1752645600.png", 
-            "http://localhost:5173" + "/images/band_name.tzero.1752667200.png",
-            "http://localhost:5173" + "/images/band_name.tzero.1752688800.png",
-            "http://localhost:5173" + "/images/band_name.tzero.1752710400.png",
-            "http://localhost:5173" + "/images/band_name.tzero.1752732000.png"]
+    images: ["http://localhost:5173" + "/temp_images/band_name.tzero.1752645600.png", 
+            "http://localhost:5173" + "/temp_images/band_name.tzero.1752667200.png",
+            "http://localhost:5173" + "/temp_images/band_name.tzero.1752688800.png",
+            "http://localhost:5173" + "/temp_images/band_name.tzero.1752710400.png",
+            "http://localhost:5173" + "/temp_images/band_name.tzero.1752732000.png"]
   }
 
   // [
