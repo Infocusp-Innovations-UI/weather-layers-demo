@@ -61,6 +61,34 @@ map.addLayer(
   ),
 );
 
+let tooltipControl;
+let legendControl;
+function setupLayerControls() {
+  if (legendControl) legendControl.remove();
+  const title = currentLayerType === "temp" ? "Temperature" : "Rainfall";
+  const unit = currentLayerType === "temp" ? "°C" : "mm/h";
+
+  legendControl = new WeatherLayers.LegendControl({
+    title,
+    unitFormat: { unit },
+    palette: currentLayerType === "temp" ? TemperaturePalette : RainPalette,
+  });
+  legendControl.addTo(document.getElementById("timeline-controls"));
+
+  tooltipControl = new WeatherLayers.TooltipControl({
+    unitFormat: { unit },
+    directionFormat: WeatherLayers.DirectionFormat.CARDINAL3,
+    followCursor: true,
+  });
+  deckLayer.setProps({
+    onLoad: () =>
+      deckLayer._deck.getCanvas() &&
+      tooltipControl.addTo(deckLayer._deck.getCanvas().parentElement),
+    onHover: (event) => tooltipControl.updatePickingInfo(event),
+  });
+  deckLayer.props.onLoad();
+}
+
 document.getElementById("contourToggle").addEventListener("change", (e) => {
   showContours = e.target.checked;
   update();
@@ -70,12 +98,14 @@ document.getElementById("tempBtn").addEventListener("click", () => {
   currentLayerType = "temp";
   toggleActive("tempBtn", "rainBtn");
   update();
+  setupLayerControls();
 });
 
 document.getElementById("rainBtn").addEventListener("click", () => {
   currentLayerType = "rain";
   toggleActive("rainBtn", "tempBtn");
   update();
+  setupLayerControls();
 });
 
 function toggleActive(activeId, inactiveId) {
@@ -150,6 +180,7 @@ async function update() {
   if (showContours) layers.splice(1, 0, contourLayer);
 
   deckLayer.setProps({ layers });
+  setupLayerControls();
 }
 
 function createRasterLayer(img1, img2, weight, palette, isTemp) {
@@ -158,6 +189,7 @@ function createRasterLayer(img1, img2, weight, palette, isTemp) {
     image: img1,
     image2: img2,
     imageWeight: weight,
+    imageUnscale: isTemp ? [-75, 50] : [0, 255],
     bounds,
     pickable: true,
     palette,
