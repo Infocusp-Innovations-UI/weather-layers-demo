@@ -15,12 +15,12 @@ let currentLayerType = "temp";
 let currentDatetime;
 
 const now = new Date();
-const start = new Date(
-  Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 6),
-);
-const end = new Date(
-  Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 10),
-);
+// const start = new Date(
+//   Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 6),
+// );
+// const end = new Date(
+//   Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 10),
+// );
 
 let files = [];
 // for (let d = new Date(start); d <= end; d.setUTCHours(d.getUTCHours() + 6)) {
@@ -44,6 +44,7 @@ async function getImages() {
   //     .then(response => response.json())
   //     .then(json => console.log(json))
 
+  //  Get data for currentLayerType ( temp and rain )
   const response = {
     "tzero": 1721115960, 
     images: ["http://localhost:5173" + "/images/band_name.tzero.1752645600.png", 
@@ -60,27 +61,40 @@ async function getImages() {
   //   '2025-07-17T00:00:00.000Z', // 1752710400
   //   '2025-07-17T06:00:00.000Z'  // 1752732000
   // ] 
+
+  // fetch and update image of wind.
+  const responseWind = {
+    "tzero": 1721115960, 
+    images: ["http://localhost:5173" + "/wind_images/band_name.tzero.1752645600.png", 
+            "http://localhost:5173" + "/wind_images/band_name.tzero.1752667200.png",
+            "http://localhost:5173" + "/wind_images/band_name.tzero.1752688800.png",
+            "http://localhost:5173" + "/wind_images/band_name.tzero.1752710400.png",
+            "http://localhost:5173" + "/wind_images/band_name.tzero.1752732000.png"]
+  }
   
+  const windImagesMap = {};
+  responseWind.images.forEach(windImage => {
+    const imageParts= windImage.split("."); // replace with "/" and recheck logic.
+    const timeStamp = imageParts[imageParts.length - 2]
+    const date = new Date(timeStamp * 1000);
+    const isoString = date.toISOString(); 
+    windImagesMap[isoString] = windImage
+  })
+
   const isTemp = currentLayerType === "temp";
   files = response.images.map(image => {
     const url = isTemp ? "tempUrl" : "rainUrl";
-    const imageParts= image.split("."); // replace with "/"
+    const imageParts= image.split("."); // replace with "/" and recheck logic.
     const timeStamp = imageParts[imageParts.length - 2]
     const date = new Date(timeStamp * 1000);
     const isoString = date.toISOString();
 
     return {
       datetime: isoString,
-      [url]: image
+      [url]: image,
+      'windUrl': windImagesMap[isoString]
     }
   })
-
-  // console.log("__files")
-  // console.log(_files)
-  // console.log("_files")
-  // console.log(files)
-
-  // Call API here ends.
 }
 
 await getImages()
@@ -92,9 +106,6 @@ for (let d = new Date(start_dt); d <= end_dt; d.setUTCHours(d.getUTCHours() + 1)
   hourlyDatetimes.push(d.toISOString());
 }
 currentDatetime = hourlyDatetimes[0];
-
-console.log("_hourlyDatetimes")
-console.log(hourlyDatetimes)
 
 const map = Lmap(document.getElementById("lmap"), { worldCopyJump: true })
   .fitWorld()
@@ -180,8 +191,8 @@ async function update() {
     await Promise.all([
       WeatherLayers.loadTextureData(image1Url),
       WeatherLayers.loadTextureData(image2Url),
-      // WeatherLayers.loadTextureData(startFile.windUrl),
-      // WeatherLayers.loadTextureData(endFile.windUrl),
+      WeatherLayers.loadTextureData(startFile.windUrl),
+      WeatherLayers.loadTextureData(endFile.windUrl),
     ]);
 
   const rasterLayer = createRasterLayer(
@@ -199,7 +210,7 @@ async function update() {
   // );
   const windLayer = createWindLayer(windImage1, windImage2, imageWeight);
 
-  const layers = [rasterLayer]; //, windLayer
+  const layers = [rasterLayer, windLayer]; //, windLayer
   // if (showContours) layers.splice(1, 0, contourLayer);
 
   deckLayer.setProps({ layers });
