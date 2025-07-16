@@ -11,7 +11,7 @@ const bounds = [-180, -85.051129, 180, 85.051129];
 const clipBounds = [-181, -85.051129, 181, 85.051129];
 
 let currentLayerType = "temp";
-let showContours = true;
+// let showContours = true;
 let currentDatetime;
 
 const now = new Date();
@@ -61,10 +61,10 @@ map.addLayer(
   ),
 );
 
-document.getElementById("contourToggle").addEventListener("change", (e) => {
-  showContours = e.target.checked;
-  update();
-});
+// document.getElementById("contourToggle").addEventListener("change", (e) => {
+//   showContours = e.target.checked;
+//   update();
+// });
 
 document.getElementById("tempBtn").addEventListener("click", () => {
   currentLayerType = "temp";
@@ -101,6 +101,7 @@ const timelineControl = new WeatherLayers.TimelineControl({
 timelineControl.addTo(document.getElementById("timeline-controls"));
 
 async function update() {
+  // Call API here.
   const datetimes = files.map((f) => f.datetime);
   const startDatetime = WeatherLayers.getClosestStartDatetime(
     datetimes,
@@ -147,7 +148,7 @@ async function update() {
   const windLayer = createWindLayer(windImage1, windImage2, imageWeight);
 
   const layers = [rasterLayer, windLayer];
-  if (showContours) layers.splice(1, 0, contourLayer);
+  // if (showContours) layers.splice(1, 0, contourLayer);
 
   deckLayer.setProps({ layers });
 }
