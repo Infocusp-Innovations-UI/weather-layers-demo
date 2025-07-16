@@ -22,7 +22,7 @@ const end = new Date(
   Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 10),
 );
 
-const files = [];
+let files = [];
 for (let d = new Date(start); d <= end; d.setUTCHours(d.getUTCHours() + 6)) {
   const ts = d.toISOString();
   const yyyymmdd = ts.slice(0, 10).replace(/-/g, "");
@@ -101,7 +101,48 @@ const timelineControl = new WeatherLayers.TimelineControl({
 timelineControl.addTo(document.getElementById("timeline-controls"));
 
 async function update() {
-  // Call API here.
+  // Call API here starts.
+  fetch('https://jsonplaceholder.typicode.com/todos/1')
+      .then(response => response.json())
+      .then(json => console.log(json))
+
+  const response = {
+    "tzero": 1721115960, 
+    images: ["https://" + window.location.hostname + "/images/band_name.tzero.1752645600.png", 
+            "https://" + window.location.hostname + "/images/band_name.tzero.1752667200.png",
+            "https://" + window.location.hostname + "/images/band_name.tzero.1752688800.png",
+            "https://" + window.location.hostname + "/images/band_name.tzero.1752710400.png",
+            "https://" + window.location.hostname + "/images/band_name.tzero.1752732000.png"]
+  }
+
+  // [
+  //   '2025-07-16T06:00:00.000Z', // 1752645600
+  //   '2025-07-16T12:00:00.000Z', // 1752667200
+  //   '2025-07-16T18:00:00.000Z', // 1752688800
+  //   '2025-07-17T00:00:00.000Z', // 1752710400
+  //   '2025-07-17T06:00:00.000Z'  // 1752732000
+  // ] 
+  
+  const isTemp = currentLayerType === "temp";
+  files = response.images.map(image => {
+    const url = isTemp ? "tempUrl" : "rainUrl";
+    const imageParts= image.split("."); // replace with "/"
+    const timeStamp = imageParts[imageParts.length - 2]
+    const date = new Date(timeStamp * 1000);
+    const isoString = date.toISOString();
+
+    return {
+      datetime: isoString,
+      [url]: image
+    }
+  })
+
+  // console.log("__files")
+  // console.log(_files)
+  console.log("_files")
+  console.log(files)
+
+  // Call API here ends.
   const datetimes = files.map((f) => f.datetime);
   const startDatetime = WeatherLayers.getClosestStartDatetime(
     datetimes,
@@ -120,11 +161,16 @@ async function update() {
   const startFile = files.find((f) => f.datetime === startDatetime);
   const endFile = files.find((f) => f.datetime === endDatetime);
 
-  const isTemp = currentLayerType === "temp";
+  // const isTemp = currentLayerType === "temp";
   const palette = isTemp ? TemperaturePalette : RainPalette;
   const image1Url = isTemp ? startFile.tempUrl : startFile.rainUrl;
   const image2Url = isTemp ? endFile.tempUrl : endFile.rainUrl;
 
+
+  console.log("_check")
+  console.log(image1Url)
+  console.log(image2Url)
+  
   const [rasterImage1, rasterImage2, windImage1, windImage2] =
     await Promise.all([
       WeatherLayers.loadTextureData(image1Url),
@@ -140,14 +186,15 @@ async function update() {
     palette,
     isTemp,
   );
-  const contourLayer = createContourLayer(
-    rasterImage1,
-    rasterImage2,
-    imageWeight,
-  );
+  
+  // const contourLayer = createContourLayer(
+  //   rasterImage1,
+  //   rasterImage2,
+  //   imageWeight,
+  // );
   const windLayer = createWindLayer(windImage1, windImage2, imageWeight);
 
-  const layers = [rasterLayer, windLayer];
+  const layers = [rasterLayer]; //, windLayer
   // if (showContours) layers.splice(1, 0, contourLayer);
 
   deckLayer.setProps({ layers });
@@ -168,22 +215,22 @@ function createRasterLayer(img1, img2, weight, palette, isTemp) {
   });
 }
 
-function createContourLayer(img1, img2, weight) {
-  return new WeatherLayers.ContourLayer({
-    id: "contour",
-    image: img1,
-    image2: img2,
-    imageWeight: weight,
-    bounds,
-    interval: 0.02,
-    majorInterval: 0.1,
-    width: 2,
-    palette: false,
-    extensions: [new ClipExtension()],
-    clipBounds,
-    opacity: 0.2,
-  });
-}
+// function createContourLayer(img1, img2, weight) {
+//   return new WeatherLayers.ContourLayer({
+//     id: "contour",
+//     image: img1,
+//     image2: img2,
+//     imageWeight: weight,
+//     bounds,
+//     interval: 0.02,
+//     majorInterval: 0.1,
+//     width: 2,
+//     palette: false,
+//     extensions: [new ClipExtension()],
+//     clipBounds,
+//     opacity: 0.2,
+//   });
+// }
 
 function createWindLayer(img1, img2, weight) {
   return new WeatherLayers.ParticleLayer({
