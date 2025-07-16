@@ -30,6 +30,8 @@ for (let d = new Date(start); d <= end; d.setUTCHours(d.getUTCHours() + 6)) {
   const timestamp = `${yyyymmdd}${hh}`;
   const cacheBust = `?ts>${Date.now()}`;
 
+  console.log("_timestamp")
+  console.log(timestamp);
   files.push({
     datetime: ts,
     tempUrl: `https://storage.googleapis.com/weather-next/static_tiles/raster/temp-tiles/${timestamp}/0/0/0.png${cacheBust}`,
@@ -49,11 +51,12 @@ const map = Lmap(document.getElementById("lmap"), { worldCopyJump: true })
   .setView([initialView.lat, initialView.lng], initialView.zoom);
 
 const deckLayer = new LeafletLayer({
-  views: [new MapView({ repeat: true })],
+  views: [new MapView({ repeat: true })],git
   layers: [],
 });
 map.addLayer(deckLayer);
 
+// add the map border stuff
 map.addLayer(
   tileLayer(
     "https://storage.googleapis.com/weather-next/static_tiles/data_pipeline/basemap/{z}/{x}/{y}.png",
@@ -61,22 +64,22 @@ map.addLayer(
   ),
 );
 
-document.getElementById("contourToggle").addEventListener("change", (e) => {
-  showContours = e.target.checked;
-  update();
-});
+// document.getElementById("contourToggle").addEventListener("change", (e) => {
+//   showContours = e.target.checked;
+//   update();
+// });
 
-document.getElementById("tempBtn").addEventListener("click", () => {
-  currentLayerType = "temp";
-  toggleActive("tempBtn", "rainBtn");
-  update();
-});
+// document.getElementById("tempBtn").addEventListener("click", () => {
+//   currentLayerType = "temp";
+//   toggleActive("tempBtn", "rainBtn");
+//   update();
+// });
 
-document.getElementById("rainBtn").addEventListener("click", () => {
-  currentLayerType = "rain";
-  toggleActive("rainBtn", "tempBtn");
-  update();
-});
+// document.getElementById("rainBtn").addEventListener("click", () => {
+//   currentLayerType = "rain";
+//   toggleActive("rainBtn", "tempBtn");
+//   update();
+// });
 
 function toggleActive(activeId, inactiveId) {
   document.getElementById(activeId).classList.add("active");
@@ -85,20 +88,20 @@ function toggleActive(activeId, inactiveId) {
   document.getElementById(inactiveId).classList.remove("active");
 }
 
-const timelineControl = new WeatherLayers.TimelineControl({
-  datetimes: hourlyDatetimes,
-  datetime: currentDatetime,
-  onPreload: () =>
-    Promise.all([
-      ...files.map((f) => WeatherLayers.loadTextureData(f.tempUrl)),
-      ...files.map((f) => WeatherLayers.loadTextureData(f.rainUrl)),
-    ]),
-  onUpdate: async (datetime) => {
-    currentDatetime = datetime;
-    await update();
-  },
-});
-timelineControl.addTo(document.getElementById("timeline-controls"));
+// const timelineControl = new WeatherLayers.TimelineControl({
+//   datetimes: hourlyDatetimes,
+//   datetime: currentDatetime,
+//   onPreload: () =>
+//     Promise.all([
+//       ...files.map((f) => WeatherLayers.loadTextureData(f.tempUrl)),
+//       ...files.map((f) => WeatherLayers.loadTextureData(f.rainUrl)),
+//     ]),
+//   onUpdate: async (datetime) => {
+//     currentDatetime = datetime;
+//     await update();
+//   },
+// });
+// timelineControl.addTo(document.getElementById("timeline-controls"));
 
 async function update() {
   const datetimes = files.map((f) => f.datetime);
@@ -124,6 +127,8 @@ async function update() {
   const image1Url = isTemp ? startFile.tempUrl : startFile.rainUrl;
   const image2Url = isTemp ? endFile.tempUrl : endFile.rainUrl;
 
+  console.log("_image1Url")
+  console.log(image1Url)
   const [rasterImage1, rasterImage2, windImage1, windImage2] =
     await Promise.all([
       WeatherLayers.loadTextureData(image1Url),
@@ -139,15 +144,15 @@ async function update() {
     palette,
     isTemp,
   );
-  const contourLayer = createContourLayer(
-    rasterImage1,
-    rasterImage2,
-    imageWeight,
-  );
-  const windLayer = createWindLayer(windImage1, windImage2, imageWeight);
+  // const contourLayer = createContourLayer(
+  //   rasterImage1,
+  //   rasterImage2,
+  //   imageWeight,
+  // );
+  // const windLayer = createWindLayer(windImage1, windImage2, imageWeight);
 
-  const layers = [rasterLayer, windLayer];
-  if (showContours) layers.splice(1, 0, contourLayer);
+  const layers = [rasterLayer];
+  // if (showContours) layers.splice(1, 0, contourLayer);
 
   deckLayer.setProps({ layers });
 }
