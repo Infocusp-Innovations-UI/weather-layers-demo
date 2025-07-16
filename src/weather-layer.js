@@ -38,12 +38,63 @@ let files = [];
 //   });
 // }
 
-const hourlyDatetimes = [];
+async function getImages() {
+  // Call API here starts.
+  // fetch('https://jsonplaceholder.typicode.com/todos/1')
+  //     .then(response => response.json())
+  //     .then(json => console.log(json))
 
-for (let d = new Date(start); d <= end; d.setUTCHours(d.getUTCHours() + 1)) {
+  const response = {
+    "tzero": 1721115960, 
+    images: ["http://localhost:5173" + "/images/band_name.tzero.1752645600.png", 
+            "http://localhost:5173" + "/images/band_name.tzero.1752667200.png",
+            "http://localhost:5173" + "/images/band_name.tzero.1752688800.png",
+            "http://localhost:5173" + "/images/band_name.tzero.1752710400.png",
+            "http://localhost:5173" + "/images/band_name.tzero.1752732000.png"]
+  }
+
+  // [
+  //   '2025-07-16T06:00:00.000Z', // 1752645600
+  //   '2025-07-16T12:00:00.000Z', // 1752667200
+  //   '2025-07-16T18:00:00.000Z', // 1752688800
+  //   '2025-07-17T00:00:00.000Z', // 1752710400
+  //   '2025-07-17T06:00:00.000Z'  // 1752732000
+  // ] 
+  
+  const isTemp = currentLayerType === "temp";
+  files = response.images.map(image => {
+    const url = isTemp ? "tempUrl" : "rainUrl";
+    const imageParts= image.split("."); // replace with "/"
+    const timeStamp = imageParts[imageParts.length - 2]
+    const date = new Date(timeStamp * 1000);
+    const isoString = date.toISOString();
+
+    return {
+      datetime: isoString,
+      [url]: image
+    }
+  })
+
+  // console.log("__files")
+  // console.log(_files)
+  // console.log("_files")
+  // console.log(files)
+
+  // Call API here ends.
+}
+
+await getImages()
+
+const hourlyDatetimes = [];
+const start_dt = new Date(files[0].datetime);
+const end_dt = new Date(files[files.length - 1].datetime);
+for (let d = new Date(start_dt); d <= end_dt; d.setUTCHours(d.getUTCHours() + 1)) {
   hourlyDatetimes.push(d.toISOString());
 }
 currentDatetime = hourlyDatetimes[0];
+
+console.log("_hourlyDatetimes")
+console.log(hourlyDatetimes)
 
 const map = Lmap(document.getElementById("lmap"), { worldCopyJump: true })
   .fitWorld()
@@ -102,48 +153,6 @@ const timelineControl = new WeatherLayers.TimelineControl({
 timelineControl.addTo(document.getElementById("timeline-controls"));
 
 async function update() {
-  // Call API here starts.
-  // fetch('https://jsonplaceholder.typicode.com/todos/1')
-  //     .then(response => response.json())
-  //     .then(json => console.log(json))
-
-  const response = {
-    "tzero": 1721115960, 
-    images: ["http://localhost:5173" + "/images/band_name.tzero.1752645600.png", 
-            "http://localhost:5173" + "/images/band_name.tzero.1752667200.png",
-            "http://localhost:5173" + "/images/band_name.tzero.1752688800.png",
-            "http://localhost:5173" + "/images/band_name.tzero.1752710400.png",
-            "http://localhost:5173" + "/images/band_name.tzero.1752732000.png"]
-  }
-
-  // [
-  //   '2025-07-16T06:00:00.000Z', // 1752645600
-  //   '2025-07-16T12:00:00.000Z', // 1752667200
-  //   '2025-07-16T18:00:00.000Z', // 1752688800
-  //   '2025-07-17T00:00:00.000Z', // 1752710400
-  //   '2025-07-17T06:00:00.000Z'  // 1752732000
-  // ] 
-  
-  const isTemp = currentLayerType === "temp";
-  files = response.images.map(image => {
-    const url = isTemp ? "tempUrl" : "rainUrl";
-    const imageParts= image.split("."); // replace with "/"
-    const timeStamp = imageParts[imageParts.length - 2]
-    const date = new Date(timeStamp * 1000);
-    const isoString = date.toISOString();
-
-    return {
-      datetime: isoString,
-      [url]: image
-    }
-  })
-
-  // console.log("__files")
-  // console.log(_files)
-  // console.log("_files")
-  // console.log(files)
-
-  // Call API here ends.
   const datetimes = files.map((f) => f.datetime);
   const startDatetime = WeatherLayers.getClosestStartDatetime(
     datetimes,
@@ -162,7 +171,7 @@ async function update() {
   const startFile = files.find((f) => f.datetime === startDatetime);
   const endFile = files.find((f) => f.datetime === endDatetime);
 
-  // const isTemp = currentLayerType === "temp";
+  const isTemp = currentLayerType === "temp";
   const palette = isTemp ? TemperaturePalette : RainPalette;
   const image1Url = isTemp ? startFile.tempUrl : startFile.rainUrl;
   const image2Url = isTemp ? endFile.tempUrl : endFile.rainUrl;
