@@ -16,45 +16,59 @@ let currentDatetime;
 
 let files = [];
 
+async function getLayer() {
+  const isTemp = currentLayerType == 'temp';
+  const bandName = isTemp ? "2m_temperature" : "total_precipitation_6hr"
+  const params = new URLSearchParams(window.location.search);
+  const dateString = params.get('date');
+  const date = new Date(dateString);
+  const epochSeconds = Math.floor(date.getTime() / 1000);
+  const url = `https://zarrvisapi-dot-anthromet-staging.uk.r.appspot.com/generate_png?band_name=${bandName}&timestamp=${epochSeconds}`
+  const response = await fetch(url, {credentials: "include", method: 'GET'});
+  const data = await response.json();
+  
+  return data
+}
+
+async function getWind() {
+  const params = new URLSearchParams(window.location.search);
+  const dateString = params.get('date');
+  const date = new Date(dateString);
+  const epochSeconds = Math.floor(date.getTime() / 1000);
+  const url = `https://zarrvisapi-dot-anthromet-staging.uk.r.appspot.com/generate_png?band_name=10m_u_component_of_wind,10m_v_component_of_wind&timestamp=${epochSeconds}`
+  const response = await fetch(url, {credentials: "include", method: 'GET'});
+  const data = await response.json();
+  
+  return data
+}
+
 async function getImages() {
-  // fetch(`https://zarrvisapi-dot-anthromet-staging.uk.r.appspot.com/generate_png?band_name=2m_temperature&timestamp=1720051200`).then(data => {
-  //   console.log("_data")
-  //   console.log(data)
-  // }).catch(err=> {
-  //   console.log(err)
-  //   console.log("_err")
-  // })
+  //  fetch temp or rain.
+  const response = await getLayer()
+  // const response = {
+  //   "tzero": 1721115960, 
+  //   images: ["http://localhost:5173" + "/temp_images/band_name.tzero.1752645600.png", 
+  //           "http://localhost:5173" + "/temp_images/band_name.tzero.1752667200.png",
+  //           "http://localhost:5173" + "/temp_images/band_name.tzero.1752688800.png",
+  //           "http://localhost:5173" + "/temp_images/band_name.tzero.1752710400.png",
+  //           "http://localhost:5173" + "/temp_images/band_name.tzero.1752732000.png"]
+  // }
 
-  // Call API here starts.
-  // fetch('https://jsonplaceholder.typicode.com/todos/1')
-  //     .then(response => response.json())
-  //     .then(json => console.log(json))
-
-  //  Get data for currentLayerType: "temp" / "rain"
-
-  const response = {
-    "tzero": 1721115960, 
-    images: ["http://localhost:5173" + "/temp_images/band_name.tzero.1752645600.png", 
-            "http://localhost:5173" + "/temp_images/band_name.tzero.1752667200.png",
-            "http://localhost:5173" + "/temp_images/band_name.tzero.1752688800.png",
-            "http://localhost:5173" + "/temp_images/band_name.tzero.1752710400.png",
-            "http://localhost:5173" + "/temp_images/band_name.tzero.1752732000.png"]
-  }
-
-  // fetch and update image of wind.
-  const responseWind = {
-    "tzero": 1721115960, 
-    images: ["http://localhost:5173" + "/wind_images/band_name.tzero.1752645600.png", 
-            "http://localhost:5173" + "/wind_images/band_name.tzero.1752667200.png",
-            "http://localhost:5173" + "/wind_images/band_name.tzero.1752688800.png",
-            "http://localhost:5173" + "/wind_images/band_name.tzero.1752710400.png",
-            "http://localhost:5173" + "/wind_images/band_name.tzero.1752732000.png"]
-  }
+  // fetch wind.
+  const responseWind = await getWind()
+  // const responseWind = {
+  //   "tzero": 1721115960, 
+  //   images: ["http://localhost:5173" + "/wind_images/band_name.tzero.1752645600.png", 
+  //           "http://localhost:5173" + "/wind_images/band_name.tzero.1752667200.png",
+  //           "http://localhost:5173" + "/wind_images/band_name.tzero.1752688800.png",
+  //           "http://localhost:5173" + "/wind_images/band_name.tzero.1752710400.png",
+  //           "http://localhost:5173" + "/wind_images/band_name.tzero.1752732000.png"]
+  // }
   
   const windImagesMap = {};
   responseWind.images.forEach(windImage => {
-    const imageParts= windImage.split("."); // replace with "/" and recheck logic.
-    const timeStamp = imageParts[imageParts.length - 2]
+    const imageParts = windImage.split("/");
+    const timeStamp = imageParts[imageParts.length - 1].replace(".png", "")
     const date = new Date(timeStamp * 1000);
     const isoString = date.toISOString(); 
     windImagesMap[isoString] = windImage
@@ -62,9 +76,15 @@ async function getImages() {
 
   const isTemp = currentLayerType === "temp";
   files = response.images.map(image => {
+    // const url = isTemp ? "tempUrl" : "rainUrl";
+    // const imageParts= image.split("."); // replace with "/" and recheck logic.
+    // const timeStamp = imageParts[imageParts.length - 2]
+    // const date = new Date(timeStamp * 1000);
+    // const isoString = date.toISOString();
+
     const url = isTemp ? "tempUrl" : "rainUrl";
-    const imageParts= image.split("."); // replace with "/" and recheck logic.
-    const timeStamp = imageParts[imageParts.length - 2]
+    const imageParts = image.split("/");
+    const timeStamp = imageParts[imageParts.length - 1].replace(".png", "")
     const date = new Date(timeStamp * 1000);
     const isoString = date.toISOString();
 
@@ -127,7 +147,7 @@ const timelineControl = new WeatherLayers.TimelineControl({
   datetime: currentDatetime,
   onPreload: () =>
     Promise.all([
-      ...files.map((f) => WeatherLayers.loadTextureData(f.tempUrl)),
+      ...files.map((f) => WeatherLayers.loadTextureData(f.tempUrl, {headers: {credentials: "include", method: "GET"}})),
       // ...files.map((f) => WeatherLayers.loadTextureData(f.rainUrl)),
     ]),
   onUpdate: async (datetime) => {
@@ -160,12 +180,11 @@ async function update() {
   const palette = isTemp ? TemperaturePalette : RainPalette;
   const image1Url = isTemp ? startFile.tempUrl : startFile.rainUrl;
   const image2Url = isTemp ? endFile.tempUrl : endFile.rainUrl;
-  
-  console.log(image1Url)
+
   const [rasterImage1, rasterImage2, windImage1, windImage2] =
     await Promise.all([
-      WeatherLayers.loadTextureData(image1Url),
-      WeatherLayers.loadTextureData(image2Url),
+      WeatherLayers.loadTextureData(image1Url, {headers: {credentials: "include", method: "GET"}}),
+      WeatherLayers.loadTextureData(image2Url, {headers: {credentials: "include", method: "GET"}}),
       WeatherLayers.loadTextureData(startFile.windUrl),
       WeatherLayers.loadTextureData(endFile.windUrl),
     ]);
