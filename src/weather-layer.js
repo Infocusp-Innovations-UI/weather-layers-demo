@@ -23,22 +23,23 @@ const end = new Date(
 );
 
 let files = [];
-for (let d = new Date(start); d <= end; d.setUTCHours(d.getUTCHours() + 6)) {
-  const ts = d.toISOString();
-  const yyyymmdd = ts.slice(0, 10).replace(/-/g, "");
-  const hh = ts.slice(11, 13);
-  const timestamp = `${yyyymmdd}${hh}`;
-  const cacheBust = `?ts>${Date.now()}`;
+// for (let d = new Date(start); d <= end; d.setUTCHours(d.getUTCHours() + 6)) {
+//   const ts = d.toISOString();
+//   const yyyymmdd = ts.slice(0, 10).replace(/-/g, "");
+//   const hh = ts.slice(11, 13);
+//   const timestamp = `${yyyymmdd}${hh}`;
+//   const cacheBust = `?ts>${Date.now()}`;
 
-  files.push({
-    datetime: ts,
-    tempUrl: `https://storage.googleapis.com/weather-next/static_tiles/raster/temp-tiles/${timestamp}/0/0/0.png${cacheBust}`,
-    rainUrl: `https://storage.googleapis.com/weather-next/static_tiles/raster/rain-tiles/${timestamp}/0/0/0.png${cacheBust}`,
-    windUrl: `https://storage.googleapis.com/weather-next/static_tiles/raster/wind/${timestamp}.png${cacheBust}`,
-  });
-}
+//   files.push({
+//     datetime: ts,
+//     tempUrl: `https://storage.googleapis.com/weather-next/static_tiles/raster/temp-tiles/${timestamp}/0/0/0.png${cacheBust}`,
+//     rainUrl: `https://storage.googleapis.com/weather-next/static_tiles/raster/rain-tiles/${timestamp}/0/0/0.png${cacheBust}`,
+//     windUrl: `https://storage.googleapis.com/weather-next/static_tiles/raster/wind/${timestamp}.png${cacheBust}`,
+//   });
+// }
 
 const hourlyDatetimes = [];
+
 for (let d = new Date(start); d <= end; d.setUTCHours(d.getUTCHours() + 1)) {
   hourlyDatetimes.push(d.toISOString());
 }
@@ -91,7 +92,7 @@ const timelineControl = new WeatherLayers.TimelineControl({
   onPreload: () =>
     Promise.all([
       ...files.map((f) => WeatherLayers.loadTextureData(f.tempUrl)),
-      ...files.map((f) => WeatherLayers.loadTextureData(f.rainUrl)),
+      // ...files.map((f) => WeatherLayers.loadTextureData(f.rainUrl)),
     ]),
   onUpdate: async (datetime) => {
     currentDatetime = datetime;
@@ -102,17 +103,17 @@ timelineControl.addTo(document.getElementById("timeline-controls"));
 
 async function update() {
   // Call API here starts.
-  fetch('https://jsonplaceholder.typicode.com/todos/1')
-      .then(response => response.json())
-      .then(json => console.log(json))
+  // fetch('https://jsonplaceholder.typicode.com/todos/1')
+  //     .then(response => response.json())
+  //     .then(json => console.log(json))
 
   const response = {
     "tzero": 1721115960, 
-    images: ["https://" + window.location.hostname + "/images/band_name.tzero.1752645600.png", 
-            "https://" + window.location.hostname + "/images/band_name.tzero.1752667200.png",
-            "https://" + window.location.hostname + "/images/band_name.tzero.1752688800.png",
-            "https://" + window.location.hostname + "/images/band_name.tzero.1752710400.png",
-            "https://" + window.location.hostname + "/images/band_name.tzero.1752732000.png"]
+    images: ["http://localhost:5173" + "/images/band_name.tzero.1752645600.png", 
+            "http://localhost:5173" + "/images/band_name.tzero.1752667200.png",
+            "http://localhost:5173" + "/images/band_name.tzero.1752688800.png",
+            "http://localhost:5173" + "/images/band_name.tzero.1752710400.png",
+            "http://localhost:5173" + "/images/band_name.tzero.1752732000.png"]
   }
 
   // [
@@ -139,8 +140,8 @@ async function update() {
 
   // console.log("__files")
   // console.log(_files)
-  console.log("_files")
-  console.log(files)
+  // console.log("_files")
+  // console.log(files)
 
   // Call API here ends.
   const datetimes = files.map((f) => f.datetime);
@@ -165,18 +166,13 @@ async function update() {
   const palette = isTemp ? TemperaturePalette : RainPalette;
   const image1Url = isTemp ? startFile.tempUrl : startFile.rainUrl;
   const image2Url = isTemp ? endFile.tempUrl : endFile.rainUrl;
-
-
-  console.log("_check")
-  console.log(image1Url)
-  console.log(image2Url)
   
   const [rasterImage1, rasterImage2, windImage1, windImage2] =
     await Promise.all([
       WeatherLayers.loadTextureData(image1Url),
       WeatherLayers.loadTextureData(image2Url),
-      WeatherLayers.loadTextureData(startFile.windUrl),
-      WeatherLayers.loadTextureData(endFile.windUrl),
+      // WeatherLayers.loadTextureData(startFile.windUrl),
+      // WeatherLayers.loadTextureData(endFile.windUrl),
     ]);
 
   const rasterLayer = createRasterLayer(
