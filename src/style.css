@@ -85,3 +85,20 @@ body {
   transform: scale(1.2);
   cursor: pointer;
 }
+
+.page-loader{  
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  opacity: 0.5;
+  font-size: 20px;
+  opacity: 0.6;
+  color: white;
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+.show-loader{
+  display: flex;
+}

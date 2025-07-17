@@ -86,6 +86,8 @@ async function getWind() {
 }
 
 async function getImages() {
+  document.getElementsByClassName("page-loader")[0].classList.add("show-loader");
+  document.getElementsByClassName("page-loader")[0].innerHTML = "<div>FETCHING IMAGES...</div>";
   //  fetch temp or rain.
   const response = await getLayer()
   // const response = {
@@ -143,8 +145,10 @@ async function getImages() {
       allFiles.push(fetchAndProcessImage(file.rainUrl))
     }
   })
+  document.getElementsByClassName("page-loader")[0].innerHTML = "<div>PROCESSING IMAGES...</div>";
   Promise.all(allFiles).then(data => {
     console.log("All Data Loaded")
+    document.getElementsByClassName("page-loader")[0].classList.remove("show-loader");
   })
 }
 
