@@ -30,7 +30,50 @@ async function getLayer() {
   return data
 }
 
+const imageCache = {};
+
+async function fetchAndProcessImage(url) {
+  // 1. Fetch image as blob
+  if (imageCache[url]) {
+    console.log('Using cached image');
+    return imageCache[url];
+  }
+  const res = await fetch(url, { method: 'GET', credentials: 'include' });
+  const blob = await res.blob();
+
+  // 2. Create an image object from the blob
+  const img = await createImageBitmap(blob);
+
+  // 3. Draw image on canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  // 4. Extract pixel data
+  const imageData = ctx.getImageData(0, 0, img.width, img.height);
+  const { data, width, height } = imageData; // `data` is a Uint8ClampedArray of RGBA values
+
+  // 5. Optional: convert to Float32Array if needed
+  const floatData = new Float32Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+      floatData[i] = data[i] / 255; // Normalize to [0,1] if desired
+  }
+  
+  imageCache[url] = { data: new Uint8ClampedArray(data), width, height };
+
+  return { data: new Uint8ClampedArray(data), width, height };
+}
+
 async function getWind() {
+  // let res = await fetch("https://zarrvisapi-dot-anthromet-staging.uk.r.appspot.com/image/weathernext_pngs/2m_temperature/1747785600/1747807200.png", {
+  //     method: 'GET',
+  //     credentials: 'include'
+  // });
+  // let txt = await res.text()
+  // console.log(txt);
+
   const params = new URLSearchParams(window.location.search);
   const dateString = params.get('date');
   const date = new Date(dateString);
@@ -123,15 +166,17 @@ map.addLayer(
   ),
 );
 
-document.getElementById("tempBtn").addEventListener("click", () => {
+document.getElementById("tempBtn").addEventListener("click", async () => {
   currentLayerType = "temp";
   toggleActive("tempBtn", "rainBtn");
+  await getImages()
   update();
 });
 
-document.getElementById("rainBtn").addEventListener("click", () => {
+document.getElementById("rainBtn").addEventListener("click", async () => {
   currentLayerType = "rain";
   toggleActive("rainBtn", "tempBtn");
+  await getImages()
   update();
 });
 
@@ -145,11 +190,12 @@ function toggleActive(activeId, inactiveId) {
 const timelineControl = new WeatherLayers.TimelineControl({
   datetimes: hourlyDatetimes,
   datetime: currentDatetime,
-  onPreload: () =>
-    Promise.all([
-      ...files.map((f) => WeatherLayers.loadTextureData(f.tempUrl, {headers: {credentials: "include", method: "GET"}})),
-      // ...files.map((f) => WeatherLayers.loadTextureData(f.rainUrl)),
-    ]),
+  // onPreload: () =>
+  //   Promise.all([
+  //     ...files.map(async (f) => await fetchAndProcessImage(f.tempUrl)),
+  //     // ...files.map((f) => WeatherLayers.loadTextureData(f.tempUrl, {headers: {credentials: "include", method: "GET"}})),
+  //     // ...files.map((f) => WeatherLayers.loadTextureData(f.rainUrl)),
+  //   ]),
   onUpdate: async (datetime) => {
     currentDatetime = datetime;
     await update();
@@ -181,13 +227,20 @@ async function update() {
   const image1Url = isTemp ? startFile.tempUrl : startFile.rainUrl;
   const image2Url = isTemp ? endFile.tempUrl : endFile.rainUrl;
 
-  const [rasterImage1, rasterImage2, windImage1, windImage2] =
+  let [rasterImage1, rasterImage2, windImage1, windImage2] =
     await Promise.all([
-      WeatherLayers.loadTextureData(image1Url, {headers: {credentials: "include", method: "GET"}}),
-      WeatherLayers.loadTextureData(image2Url, {headers: {credentials: "include", method: "GET"}}),
-      WeatherLayers.loadTextureData(startFile.windUrl),
-      WeatherLayers.loadTextureData(endFile.windUrl),
+      // WeatherLayers.loadTextureData(image1Url, {headers: {credentials: "include", method: "GET"}}),
+      // WeatherLayers.loadTextureData(image2Url, {headers: {credentials: "include", method: "GET"}}),
+      // WeatherLayers.loadTextureData(startFile.windUrl),
+      // WeatherLayers.loadTextureData(endFile.windUrl),
     ]);
+
+  rasterImage1 = await fetchAndProcessImage(image1Url)
+  // console.log(rasterImage1)
+  rasterImage2 = await fetchAndProcessImage(image2Url)
+  // console.log(rasterImage2)
+  windImage1 = await fetchAndProcessImage(startFile.windUrl)
+  windImage2 = await fetchAndProcessImage(endFile.windUrl)
 
   const rasterLayer = createRasterLayer(
     rasterImage1,
