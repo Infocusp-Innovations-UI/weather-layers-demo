@@ -10,6 +10,17 @@ const initialView = { lat: 20.5937, lng: 78.9629, zoom: 3 };
 const bounds = [-180, -85.051129, 180, 85.051129];
 const clipBounds = [-181, -85.051129, 181, 85.051129];
 
+
+function getDate() {
+  const params = new URLSearchParams(window.location.search);
+  const dateString = params.get('date');
+
+  return dateString ? dateString : new Date().toISOString().split("T")[0];
+}
+
+document.getElementById("date-picker").value = getDate();
+document.getElementById("date-picker").max = new Date().toISOString().split("T")[0];
+
 let currentLayerType = "temp";
 
 let currentDatetime;
@@ -19,9 +30,7 @@ let files = [];
 async function getLayer() {
   const isTemp = currentLayerType == 'temp';
   const bandName = isTemp ? "2m_temperature" : "total_precipitation_6hr"
-  const params = new URLSearchParams(window.location.search);
-  const dateString = params.get('date');
-  const date = new Date(dateString);
+  const date = new Date(getDate());
   const epochSeconds = Math.floor(date.getTime() / 1000);
   const url = `https://zarrvisapi-dot-anthromet-staging.uk.r.appspot.com/generate_png?band_name=${bandName}&timestamp=${epochSeconds}`
   const response = await fetch(url, {credentials: "include", method: 'GET'});
@@ -74,9 +83,7 @@ async function getWind() {
   // let txt = await res.text()
   // console.log(txt);
 
-  const params = new URLSearchParams(window.location.search);
-  const dateString = params.get('date');
-  const date = new Date(dateString);
+  const date = new Date(getDate());
   const epochSeconds = Math.floor(date.getTime() / 1000);
   const url = `https://zarrvisapi-dot-anthromet-staging.uk.r.appspot.com/generate_png?band_name=10m_u_component_of_wind,10m_v_component_of_wind&timestamp=${epochSeconds}`
   const response = await fetch(url, {credentials: "include", method: 'GET'});
@@ -192,6 +199,15 @@ document.getElementById("rainBtn").addEventListener("click", async () => {
   await getImages()
   update();
 });
+
+document.getElementById("date-picker").addEventListener("change", async(e) => {
+  const selectedDate = e.target.value;
+  console.log(selectedDate)
+  const url = new URL(window.location.href);
+  url.searchParams.set("date", selectedDate);
+  window.location.href = url.toString();
+})
+
 
 function toggleActive(activeId, inactiveId) {
   document.getElementById(activeId).classList.add("active");

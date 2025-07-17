@@ -102,3 +102,14 @@ body {
 .show-loader{
   display: flex;
 }
+
+#date-picker{
+  outline: none;
+  border: none;
+  border-radius: 4px;
+  height: 32px;
+}
+
+#date-picker::placeholder{
+  color: white;
+}
