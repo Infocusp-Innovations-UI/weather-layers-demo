@@ -44,7 +44,6 @@ const imageCache = {};
 async function fetchAndProcessImage(url) {
   // 1. Fetch image as blob
   if (imageCache[url]) {
-    console.log('Using cached image');
     return imageCache[url];
   }
   const res = await fetch(url, { method: 'GET', credentials: 'include' });
@@ -70,6 +69,7 @@ async function fetchAndProcessImage(url) {
       floatData[i] = data[i] / 255; // Normalize to [0,1] if desired
   }
   
+  // console.log("caching image")
   imageCache[url] = { data: new Uint8ClampedArray(data), width, height };
 
   return { data: new Uint8ClampedArray(data), width, height };
@@ -154,7 +154,7 @@ async function getImages() {
   })
   document.getElementsByClassName("page-loader")[0].innerHTML = "<div>PROCESSING IMAGES...</div>";
   Promise.all(allFiles).then(data => {
-    console.log("All Data Loaded")
+    // console.log("All Data Loaded")
     document.getElementsByClassName("page-loader")[0].classList.remove("show-loader");
   })
 }
@@ -202,7 +202,6 @@ document.getElementById("rainBtn").addEventListener("click", async () => {
 
 document.getElementById("date-picker").addEventListener("change", async(e) => {
   const selectedDate = e.target.value;
-  console.log(selectedDate)
   const url = new URL(window.location.href);
   url.searchParams.set("date", selectedDate);
   window.location.href = url.toString();
