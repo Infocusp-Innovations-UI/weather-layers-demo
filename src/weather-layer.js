@@ -119,12 +119,6 @@ async function getImages() {
 
   const isTemp = currentLayerType === "temp";
   files = response.images.map(image => {
-    // const url = isTemp ? "tempUrl" : "rainUrl";
-    // const imageParts= image.split("."); // replace with "/" and recheck logic.
-    // const timeStamp = imageParts[imageParts.length - 2]
-    // const date = new Date(timeStamp * 1000);
-    // const isoString = date.toISOString();
-
     const url = isTemp ? "tempUrl" : "rainUrl";
     const imageParts = image.split("/");
     const timeStamp = imageParts[imageParts.length - 1].replace(".png", "")
@@ -136,6 +130,21 @@ async function getImages() {
       [url]: image,
       'windUrl': windImagesMap[isoString]
     }
+  })
+
+  // Cache all images.
+  let allFiles = [];
+  files.forEach(file => {
+    allFiles.push(fetchAndProcessImage(file.windUrl))
+    if(file?.tempUrl) {
+      allFiles.push(fetchAndProcessImage(file.tempUrl))
+    }
+    if(file?.rainUrl) {
+      allFiles.push(fetchAndProcessImage(file.rainUrl))
+    }
+  })
+  Promise.all(allFiles).then(data => {
+    console.log("All Data Loaded")
   })
 }
 
